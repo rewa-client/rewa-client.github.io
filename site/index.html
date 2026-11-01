@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>rewa client — Minecraft launcher</title>
+<link rel="icon" href="data:,">
+<style>
+  :root{
+    --bg:#0c0f14;
+    --panel:rgba(255,255,255,.045);
+    --panel-strong:rgba(255,255,255,.07);
+    --line:rgba(255,255,255,.09);
+    --text:#eef2f6;
+    --muted:#93a1b0;
+    --green:#5ee08a;
+    --green-2:#2ec46b;
+    --accent:#6fe3a8;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.55;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;z-index:-1;
+    background:
+      radial-gradient(60% 45% at 50% -5%, rgba(94,224,138,.16), transparent 65%),
+      radial-gradient(40% 30% at 90% 30%, rgba(47,196,107,.10), transparent 60%),
+      radial-gradient(45% 35% at 8% 80%, rgba(94,224,138,.07), transparent 60%);
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+  nav{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(14px);
+    background:rgba(12,15,20,.7);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px;letter-spacing:.2px}
+  .logo{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(135deg,var(--green-2),var(--green));
+    display:grid;place-items:center;font-weight:900;font-size:16px;color:#08230f;
+  }
+  .nav-links{display:flex;gap:26px;align-items:center}
+  .nav-links a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:600;transition:.2s}
+  .nav-links a:hover{color:var(--text)}
+  .lang-switch{display:flex;gap:6px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px}
+  .lang-btn{background:transparent;border:none;color:var(--muted);font-size:13px;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer;transition:.2s}
+  .lang-btn:hover{color:var(--text)}
+  .lang-btn.active{background:var(--green-2);color:#08230f}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    background:linear-gradient(135deg,var(--green-2),var(--green));
+    color:#08230f;font-weight:800;font-size:14px;
+    padding:11px 20px;border-radius:12px;text-decoration:none;
+    border:none;cursor:pointer;transition:transform .15s, box-shadow .15s;
+    box-shadow:0 8px 24px rgba(46,196,107,.25);
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(46,196,107,.35)}
+
+  .hero{padding:90px 0 70px;position:relative}
+  .hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--panel-strong);border:1px solid var(--line);
+    border-radius:999px;padding:6px 14px;font-size:13px;color:var(--accent);font-weight:600;
+  }
+  .badge .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+  h1{font-size:52px;line-height:1.08;font-weight:900;letter-spacing:-1px;margin:20px 0 16px}
+  h1 .gr{background:linear-gradient(90deg,var(--green),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:var(--muted);font-size:17px;max-width:520px}
+  .hero-actions{display:flex;gap:14px;margin-top:30px;flex-wrap:wrap}
+  .btn-ghost{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--panel);border:1px solid var(--line);color:var(--text);
+    font-weight:700;font-size:14px;padding:11px 20px;border-radius:12px;text-decoration:none;transition:.2s;
+  }
+  .btn-ghost:hover{background:var(--panel-strong)}
+  .hero-meta{display:flex;gap:30px;margin-top:34px;color:var(--muted);font-size:13px}
+  .hero-meta b{display:block;color:var(--text);font-size:19px}
+  .hero-art{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .hero-card{
+    border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);
+    background:var(--panel);box-shadow:0 20px 50px rgba(0,0,0,.4);
+  }
+  .hero-card.small{transform:translateY(24px)}
+  .hero-card img{width:100%;display:block;object-fit:cover}
+  .hero-card .cap{padding:10px 14px;font-size:12px;color:var(--muted);background:var(--panel)}
+
+  section{padding:74px 0}
+  .sec-head{margin-bottom:40px}
+  .sec-head .kicker{color:var(--accent);font-weight:800;font-size:13px;letter-spacing:2px;text-transform:uppercase}
+  .sec-head h2{font-size:34px;font-weight:900;letter-spacing:-.5px;margin-top:8px}
+  .sec-head p{color:var(--muted);margin-top:10px;max-width:600px}
+
+  .versions{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .v-card{
+    border-radius:var(--radius);overflow:hidden;
+    background:var(--panel);border:1px solid var(--line);
+    transition:transform .2s, border-color .2s;
+  }
+  .v-card:hover{transform:translateY(-6px);border-color:rgba(94,224,138,.35)}
+  .v-card .img{position:relative;aspect-ratio:2/3}
+  .v-card .img img{width:100%;height:100%;object-fit:cover;display:block}
+  .v-card .img::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 40%,rgba(12,15,20,.85))}
+  .v-tag{
+    position:absolute;top:12px;right:12px;z-index:2;
+    background:rgba(12,15,20,.75);backdrop-filter:blur(6px);
+    border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;
+  }
+  .v-tag.live{color:var(--green)}
+  .v-tag.soon{color:#ffb15e}
+  .v-body{padding:16px 18px 20px}
+  .v-body h3{font-size:18px;font-weight:800}
+  .v-body .ver{color:var(--accent);font-weight:700;font-size:13px;margin-top:4px}
+  .v-body p{color:var(--muted);font-size:13px;margin-top:10px}
+  .v-foot{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+  .pill{font-size:11px;font-weight:700;color:var(--muted);background:var(--panel-strong);border:1px solid var(--line);padding:4px 10px;border-radius:999px}
+
+  .gal{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .shot{border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);background:var(--panel)}
+  .shot img{width:100%;display:block}
+  .shot .cap{padding:12px 16px;font-size:13px;color:var(--muted)}
+
+  .dl{
+    border-radius:24px;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,rgba(46,196,107,.16),rgba(12,15,20,.1));
+    border:1px solid rgba(94,224,138,.25);
+    padding:54px 48px;text-align:center;
+  }
+  .dl::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 80% at 50% 0%,rgba(94,224,138,.12),transparent 70%)}
+  .dl .inner{position:relative}
+  .dl h2{font-size:36px;font-weight:900;letter-spacing:-.5px}
+  .dl p{color:var(--muted);max-width:520px;margin:14px auto 26px}
+  .key-note{
+    display:inline-flex;align-items:center;gap:10px;
+    background:rgba(12,15,20,.6);border:1px dashed rgba(94,224,138,.5);
+    border-radius:12px;padding:12px 18px;margin:6px 0 22px;font-size:14px;color:var(--text);
+  }
+  .key-note code{background:var(--green-2);color:#08230f;font-weight:800;border-radius:6px;padding:3px 8px;font-family:inherit}
+  .dl .meta{display:flex;gap:26px;justify-content:center;color:var(--muted);font-size:13px;margin-top:22px;flex-wrap:wrap}
+  .dl .meta b{color:var(--text)}
+
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--muted);font-size:13px}
+  footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+  footer a{color:var(--muted)}
+
+  @media(max-width:900px){
+    .hero .wrap{grid-template-columns:1fr;gap:40px}
+    h1{font-size:40px}
+    .versions,.gal{grid-template-columns:1fr 1fr}
+    .nav-links a{display:none}
+  }
+  @media(max-width:560px){.versions,.gal{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="logo">R</span>rewa client</div>
+    <div class="nav-links">
+      <a href="#versions" data-i18n="nav_versions">Версии</a>
+      <a href="#gallery" data-i18n="nav_gallery">Скриншоты</a>
+      <div class="lang-switch">
+        <button class="lang-btn active" data-lang="ru">RU</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="es">ES</button>
+        <button class="lang-btn" data-lang="fr">FR</button>
+      </div>
+      <a href="#download" class="btn" data-i18n="nav_download">Скачать</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <span class="badge"><span class="dot"></span> <span data-i18n="hero_badge">Лаунчер rewa client</span></span>
+      <h1 data-i18n="hero_title_pre">Собственный <span class="gr">Minecraft launcher</span> для локального запуска</h1>
+      <p data-i18n="hero_sub">Три версии клиента, лицензионная активация и запуск прямо из одного окна. Собственная оболочка на C++ и Direct3D — без Electron и веб-движков.</p>
+      <div class="hero-actions">
+        <a href="#download" class="btn" data-i18n="hero_dl">Скачать rewa loader.exe</a>
+        <a href="#versions" class="btn-ghost" data-i18n="hero_versions">Посмотреть версии</a>
+      </div>
+      <div class="hero-meta">
+        <div><b>3</b><span data-i18n="meta_versions">версии Minecraft</span></div>
+        <div><b>9</b><span data-i18n="meta_langs">языков интерфейса</span></div>
+        <div><b>1</b><span data-i18n="meta_exe">исполняемый файл</span></div>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="hero-card"><img src="assets/img/v1214.jpg" alt="rewa client 1.21.4"><div class="cap">Java Edition 1.21.4</div></div>
+      <div class="hero-card small"><img src="assets/img/v1122.png" alt="rewa client 1.12.2"><div class="cap">1.12.2</div></div>
+    </div>
+  </div>
+</header>
+
+<section id="versions">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker" data-i18n="ver_kicker">Версии</div>
+      <h2 data-i18n="ver_title">Что внутри лаунчера</h2>
+      <p data-i18n="ver_sub">Все версии запускаются из одного приложения — выбираете клиент, активируете ключ и жмёте Load.</p>
+    </div>
+    <div class="versions">
+      <article class="v-card">
+        <div class="img"><img src="assets/img/v1122.png" alt="rewa client 1.12.2"><span class="v-tag live" data-i18n="ver_available">Доступна</span></div>
+        <div class="v-body">
+          <h3>rewa client 1.12.2</h3>
+          <div class="ver">1.12.2</div>
+          <p data-i18n="ver_1122">Основной клиент лаунчера. Рабочая версия с поддержкой активации ключа и запуска одиночной игры.</p>
+          <div class="v-foot"><span class="pill" data-i18n="v1122_stable">⚡ Стабильный</span><span class="pill" data-i18n="v1122_key">✓ Активация ключом</span></div>
+        </div>
+      </article>
+      <article class="v-card">
+        <div class="img"><img src="assets/img/v1165.jpg" alt="rewa client 1.16.5"><span class="v-tag soon" data-i18n="ver_soon">В разработке</span></div>
+        <div class="v-body">
+          <h3>rewa client 1.16.5</h3>
+          <div class="ver">1.16.5</div>
+          <p data-i18n="ver_1165">Версия на подходе. Уже добавлена в лаунчер, запуск появится после релиза.</p>
+          <div class="v-foot"><span class="pill" data-i18n="ver_soon">🛠 В разработке</span></div>
+        </div>
+      </article>
+      <article class="v-card">
+        <div class="img"><img src="assets/img/v1214.jpg" alt="rewa client 1.21.4"><span class="v-tag soon" data-i18n="ver_soon">В разработке</span></div>
+        <div class="v-body">
+          <h3>rewa client 1.21.4</h3>
+          <div class="ver">1.21.4</div>
+          <p data-i18n="ver_1214">Свежая Java Edition. В лаунчере уже есть, доступ к запуску — после выхода.</p>
+          <div class="v-foot"><span class="pill" data-i18n="ver_soon">🛠 В разработке</span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="gallery">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker" data-i18n="gal_kicker">Интерфейс</div>
+      <h2 data-i18n="gal_title">Скриншоты лаунчера</h2>
+    </div>
+    <div class="gal">
+      <div class="shot"><img src="assets/img/shot-welcome.png" alt="Welcome"><div class="cap" data-i18n="shot_welcome">Экран приветствия</div></div>
+      <div class="shot"><img src="assets/img/shot-products.png" alt="Products"><div class="cap" data-i18n="shot_products">Карусель версий</div></div>
+      <div class="shot"><img src="assets/img/shot-product.png" alt="Product"><div class="cap" data-i18n="shot_product">Страница клиента</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap">
+    <div class="dl">
+      <div class="inner">
+        <h2 data-i18n="dl_title">Скачать rewa client</h2>
+        <p data-i18n="dl_sub">Один исполняемый файл — без установки. Скачайте, запустите и выберите версию в карусели.</p>
+        <div class="key-note"><span data-i18n="key_label">Лицензионный ключ:</span> <code>rewa-rewa-rewa-rewa</code></div>
+        <div>
+          <a href="assets/download/rewa-loader.exe" class="btn" download data-i18n="dl_btn">Скачать rewa loader.exe</a>
+        </div>
+        <div class="meta">
+          <div><b>Windows</b><br>x64</div>
+          <div><b>~4.7 МБ</b><br><span data-i18n="dl_onefile">один файл</span></div>
+          <div><b>3</b><br><span data-i18n="dl_versions">версии в комплекте</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>© <span id="yr"></span> rewa client. <span data-i18n="foot_text">Лаунчер Minecraft.</span></div>
+    <div><a href="#versions" data-i18n="nav_versions">Версии</a> · <a href="#gallery" data-i18n="nav_gallery">Скриншоты</a> · <a href="#download" data-i18n="nav_download">Скачать</a></div>
+  </div>
+</footer>
+
+<script>
+const I18N = {
+  ru: {
+    nav_versions:"Версии", nav_gallery:"Скриншоты", nav_download:"Скачать",
+    hero_badge:"Лаунчер rewa client",
+    hero_sub:"Три версии клиента, лицензионная активация и запуск прямо из одного окна. Собственная оболочка на C++ и Direct3D — без Electron и веб-движков.",
+    hero_dl:"Скачать rewa loader.exe", hero_versions:"Посмотреть версии",
+    meta_versions:"версии Minecraft", meta_langs:"языков интерфейса", meta_exe:"исполняемый файл",
+    ver_kicker:"Версии", ver_title:"Что внутри лаунчера",
+    ver_sub:"Все версии запускаются из одного приложения — выбираете клиент, активируете ключ и жмёте Load.",
+    ver_available:"Доступна", ver_soon:"В разработке",
+    ver_1122:"Основной клиент лаунчера. Рабочая версия с поддержкой активации ключа и запуска одиночной игры.",
+    v1122_stable:"⚡ Стабильный", v1122_key:"✓ Активация ключом",
+    ver_1165:"Версия на подходе. Уже добавлена в лаунчер, запуск появится после релиза.",
+    ver_1214:"Свежая Java Edition. В лаунчере уже есть, доступ к запуску — после выхода.",
+    gal_kicker:"Интерфейс", gal_title:"Скриншоты лаунчера",
+    shot_welcome:"Экран приветствия", shot_products:"Карусель версий", shot_product:"Страница клиента",
+    dl_title:"Скачать rewa client",
+    dl_sub:"Один исполняемый файл — без установки. Скачайте, запустите и выберите версию в карусели.",
+    key_label:"Лицензионный ключ:", dl_btn:"Скачать rewa loader.exe",
+    dl_onefile:"один файл", dl_versions:"версии в комплекте",
+    foot_text:"Лаунчер Minecraft."
+  },
+  en: {
+    nav_versions:"Versions", nav_gallery:"Screenshots", nav_download:"Download",
+    hero_badge:"rewa client launcher",
+    hero_sub:"Three client versions, license activation and launch all from a single window. A custom shell built on C++ and Direct3D — no Electron, no web engines.",
+    hero_dl:"Download rewa loader.exe", hero_versions:"View versions",
+    meta_versions:"Minecraft versions", meta_langs:"interface languages", meta_exe:"executable file",
+    ver_kicker:"Versions", ver_title:"What's inside the launcher",
+    ver_sub:"All versions run from a single app — pick a client, activate your key and press Load.",
+    ver_available:"Available", ver_soon:"In development",
+    ver_1122:"The launcher's main client. Working version with key activation and single-player launch.",
+    v1122_stable:"⚡ Stable", v1122_key:"✓ Key activation",
+    ver_1165:"Coming soon. Already added to the launcher, launch will arrive after release.",
+    ver_1214:"Fresh Java Edition. Already in the launcher, launch access after release.",
+    gal_kicker:"Interface", gal_title:"Launcher screenshots",
+    shot_welcome:"Welcome screen", shot_products:"Versions carousel", shot_product:"Product page",
+    dl_title:"Download rewa client",
+    dl_sub:"A single executable — no installation. Download, run and pick a version in the carousel.",
+    key_label:"License key:", dl_btn:"Download rewa loader.exe",
+    dl_onefile:"single file", dl_versions:"versions included",
+    foot_text:"Minecraft launcher."
+  },
+  es: {
+    nav_versions:"Versiones", nav_gallery:"Capturas", nav_download:"Descargar",
+    hero_badge:"Launcher rewa client",
+    hero_sub:"Tres versiones del cliente, activación de licencia y lanzamiento desde una sola ventana. Interfaz propia en C++ y Direct3D — sin Electron ni motores web.",
+    hero_dl:"Descargar rewa loader.exe", hero_versions:"Ver versiones",
+    meta_versions:"versiones de Minecraft", meta_langs:"idiomas de la interfaz", meta_exe:"archivo ejecutable",
+    ver_kicker:"Versiones", ver_title:"Qué hay dentro del launcher",
+    ver_sub:"Todas las versiones se inician desde una sola app: elige cliente, activa la clave y pulsa Load.",
+    ver_available:"Disponible", ver_soon:"En desarrollo",
+    ver_1122:"El cliente principal del launcher. Versión funcional con activación por clave y modo un jugador.",
+    v1122_stable:"⚡ Estable", v1122_key:"✓ Activación por clave",
+    ver_1165:"Próximamente. Ya está añadida al launcher, el lanzamiento llegará tras la publicación.",
+    ver_1214:"Java Edition nueva. Ya en el launcher, acceso al lanzamiento tras la publicación.",
+    gal_kicker:"Interfaz", gal_title:"Capturas del launcher",
+    shot_welcome:"Pantalla de bienvenida", shot_products:"Carrusel de versiones", shot_product:"Página del producto",
+    dl_title:"Descargar rewa client",
+    dl_sub:"Un solo ejecutable — sin instalación. Descarga, ejecuta y elige una versión en el carrusel.",
+    key_label:"Clave de licencia:", dl_btn:"Descargar rewa loader.exe",
+    dl_onefile:"archivo único", dl_versions:"versiones incluidas",
+    foot_text:"Launcher de Minecraft."
+  },
+  fr: {
+    nav_versions:"Versions", nav_gallery:"Captures", nav_download:"Télécharger",
+    hero_badge:"Launcher rewa client",
+    hero_sub:"Trois versions du client, activation de licence et lancement depuis une seule fenêtre. Une interface maison en C++ et Direct3D — sans Electron ni moteurs web.",
+    hero_dl:"Télécharger rewa loader.exe", hero_versions:"Voir les versions",
+    meta_versions:"versions de Minecraft", meta_langs:"langues de l'interface", meta_exe:"fichier exécutable",
+    ver_kicker:"Versions", ver_title:"Ce qu'il y a dans le launcher",
+    ver_sub:"Toutes les versions se lancent depuis une seule app — choisissez un client, activez votre clé et appuyez sur Load.",
+    ver_available:"Disponible", ver_soon:"En développement",
+    ver_1122:"Le client principal du launcher. Version fonctionnelle avec activation par clé et lancement solo.",
+    v1122_stable:"⚡ Stable", v1122_key:"✓ Activation par clé",
+    ver_1165:"Bientôt disponible. Déjà ajoutée au launcher, le lancement arrivera après la sortie.",
+    ver_1214:"Nouvelle Java Edition. Déjà dans le launcher, accès au lancement après la sortie.",
+    gal_kicker:"Interface", gal_title:"Captures du launcher",
+    shot_welcome:"Écran de bienvenue", shot_products:"Carrousel de versions", shot_product:"Page produit",
+    dl_title:"Télécharger rewa client",
+    dl_sub:"Un seul exécutable — sans installation. Téléchargez, lancez et choisissez une version dans le carrousel.",
+    key_label:"Clé de licence :", dl_btn:"Télécharger rewa loader.exe",
+    dl_onefile:"fichier unique", dl_versions:"versions incluses",
+    foot_text:"Launcher Minecraft."
+  }
+};
+
+function setLang(lang, save=true){
+  const dict = I18N[lang] || I18N.ru;
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(dict[key] !== undefined) el.textContent = dict[key];
+  });
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  if(save) localStorage.setItem('rewa_site_lang', lang);
+}
+
+// hero title has nested span — handle separately via innerHTML
+const heroTitle = document.querySelector('[data-i18n="hero_title_pre"]');
+const heroTitleKey = heroTitle.dataset.i18n;
+delete heroTitle.dataset.i18n;
+
+function setHeroTitle(lang){
+  const map = {
+    ru:'Собственный <span class="gr">Minecraft launcher</span> для локального запуска',
+    en:'A custom <span class="gr">Minecraft launcher</span> for local play',
+    es:'Un <span class="gr">launcher de Minecraft</span> propio para jugar local',
+    fr:'Un <span class="gr">launcher Minecraft</span> sur mesure pour le jeu local'
+  };
+  heroTitle.innerHTML = map[lang] || map.ru;
+}
+
+function applyAll(lang){
+  setLang(lang, false);
+  setHeroTitle(lang);
+}
+
+const saved = localStorage.getItem('rewa_site_lang') || 'ru';
+document.querySelectorAll('.lang-btn').forEach(b => {
+  b.addEventListener('click', () => applyAll(b.dataset.lang));
+});
+applyAll(saved);
+document.getElementById('yr').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
